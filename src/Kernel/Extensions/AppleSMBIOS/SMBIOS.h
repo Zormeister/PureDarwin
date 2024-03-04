@@ -412,6 +412,18 @@ SMBMemoryDeviceTypes[] =
     "RAM",			/* 16h  unused */
     "RAM",			/* 17h  unused */
     "DDR3",			/* 18h  DDR3, chosen in [5776134] */
+    "FBD2",         /* 19h  FBD2 */
+    "DDR4",         /* 1Ah  DDR4 */
+    "LPDDR",        /* 1Bh  LPDDR */
+    "LPDDR2",       /* 1Ch  LPDDR2 */
+    "LPDDR3",       /* 1Dh  LPDDR3 */
+    "LPDDR4",       /* 1Eh  LPDDR4 */
+    "NVDIMM",       /* 1Fh 'Logical non-volatile device' - assuming NVDIMMs */
+    "HBM",          /* 20h HBM */
+    "HBM2",         /* 21h HBM2 */
+    "DDR5",         /* 22h DDR5 */
+    "LPDDR5",       /* 23h LPDDR5 */
+    "HBM3",         /* 24h HBM3 */
 };
 
 static const int
