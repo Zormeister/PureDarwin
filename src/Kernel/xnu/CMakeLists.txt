@@ -1,5 +1,23 @@
 find_program(dsymutil_path NAMES dsymutil llvm-dsymutil REQUIRED)
 
+if (NOT DEFINED KERNEL_CONFIG)
+set(KERNEL_CONFIG "RELEASE")
+endif()
+
+if (NOT DEFINED KERNEL_ARCH)
+set(KERNEL_ARCH "X86_64")
+endif()
+
+if (KERNEL_ARCH STREQUAL "ARM64")
+if (NOT DEFINED KERNEL_MACHINE)
+message(FATAL_ERROR "No Machine defined for Kernel")
+endif()
+endif()
+
+if (KERNEL_ARCH STREQUAL "X86_64")
+set(KERNEL_MACHINE "NONE")
+endif()
+
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/xnu_header_install)
 externalproject_add(xnu_headers.extproj
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/xnu_header_build
@@ -25,10 +43,11 @@ externalproject_add(xnu_headers.extproj
             -D DSYMUTIL_PATH=${dsymutil_path}
             -P ${CMAKE_CURRENT_SOURCE_DIR}/preprocess_files.cmake
     COMMAND
-        make -C <SOURCE_DIR> installhdrs ARCH_CONFIGS=X86_64 BUILD_LTO=0
-            BUILD_WERROR=0 DO_CTFMERGE=0 KERNEL_CONFIGS=RELEASE
+        make -C <SOURCE_DIR> installhdrs ARCH_CONFIGS=${KERNEL_ARCH} BUILD_LTO=0
+            BUILD_WERROR=0 DO_CTFMERGE=0 KERNEL_CONFIGS=${KERNEL_CONFIG}
             SRCROOT=${CMAKE_CURRENT_SOURCE_DIR} OBJROOT=<BINARY_DIR>
             DSTROOT=${CMAKE_CURRENT_BINARY_DIR}/xnu_header_install
+            MACHINE_CONFIG=${KERNEL_MACHINE}
     INSTALL_COMMAND true # installed during build
     USES_TERMINAL_CONFIGURE TRUE
     USES_TERMINAL_BUILD TRUE
@@ -92,10 +111,11 @@ externalproject_add(xnu
             -D PTHREAD_HEADER_PATH=$<TARGET_PROPERTY:pthread_common_headers,INTERFACE_INCLUDE_DIRECTORIES>
             -P ${CMAKE_CURRENT_SOURCE_DIR}/preprocess_files.cmake
     COMMAND
-        make -C <SOURCE_DIR> install ARCH_CONFIGS=X86_64 BUILD_LTO=0
-            BUILD_WERROR=0 DO_CTFMERGE=0 KERNEL_CONFIGS=RELEASE
+        make -C <SOURCE_DIR> install ARCH_CONFIGS=${KERNEL_ARCH} BUILD_LTO=0
+            BUILD_WERROR=0 DO_CTFMERGE=0 KERNEL_CONFIGS=${KERNEL_CONFIG}
             SRCROOT=${CMAKE_CURRENT_SOURCE_DIR} OBJROOT=<BINARY_DIR>
             SYMROOT=${CMAKE_CURRENT_BINARY_DIR}/xnu_sym DSTROOT=${CMAKE_CURRENT_BINARY_DIR}/xnu
+            MACHINE_CONFIG=${KERNEL_MACHINE}
     INSTALL_COMMAND true # installed during build
     USES_TERMINAL_CONFIGURE TRUE
     USES_TERMINAL_BUILD TRUE

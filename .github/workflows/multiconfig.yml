@@ -1,0 +1,25 @@
+name: Multiconfig Build
+
+on: push
+  
+jobs:
+    build:
+      runs-on: macos-latest
+  
+      steps:
+        - name: Clone
+          uses: actions/checkout@v2
+        - name: Install Packages
+          run: |
+            export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
+            brew install openssl ninja
+        - name: Build (x86_64, Release)
+          run: |
+            mkdir build && cd build
+            cmake -G Ninja -DKERNEL_BUILD_XNU=1 -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DKERNEL_CONIFG="RELEASE" -DKERNEL_ARCH="X86_64" ..
+            ninja
+        - name: Build (x86_64, Development)
+          run: |
+            mkdir build && cd build
+            cmake -G Ninja -DKERNEL_BUILD_XNU=1 -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DKERNEL_CONIFG="DEVELOPMENT" -DKERNEL_ARCH="X86_64" ..
+            ninja
