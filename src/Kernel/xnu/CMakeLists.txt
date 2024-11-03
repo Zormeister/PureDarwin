@@ -21,7 +21,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Development")
 set(KERNEL_CONFIG "DEVELOPMENT")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 set(KERNEL_CONFIG "DEBUG")
-else
+else()
 set(KERNEL_CONFIG "RELEASE")
 endif()
 
