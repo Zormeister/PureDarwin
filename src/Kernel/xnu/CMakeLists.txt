@@ -7,6 +7,7 @@ endif()
 if(BUILD_ARCH STREQUAL "x86_64")
 set(KERNEL_ARCH "X86_64")
 set(KERNEL_MACHINE "NONE")
+set(KERNEL_MACHINE_ALT "VMAPPLE")
 
 elseif(BUILD_ARCH STREQUAL "arm64")
 set(KERNEL_ARCH "ARM64")
@@ -14,6 +15,8 @@ set(KERNEL_ARCH "ARM64")
 if(NOT DEFINED KERNEL_MACHINE)
 message(FATAL_ERROR "No Machine defined for Kernel")
 endif()
+
+set(KERNEL_MACHINE_ALT ${KERNEL_MACHINE})
 
 endif()
 
@@ -26,7 +29,7 @@ set(KERNEL_CONFIG "RELEASE")
 endif()
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/xnu_header_install)
-externalproject_add(xnu_headers.extproj
+externalproject_add(xnu_headers_x86_64.extproj
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/xnu_header_build
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
     CONFIGURE_COMMAND true # disable auto CMake configure
@@ -50,21 +53,58 @@ externalproject_add(xnu_headers.extproj
             -D DSYMUTIL_PATH=${dsymutil_path}
             -P ${CMAKE_CURRENT_SOURCE_DIR}/preprocess_files.cmake
     COMMAND
-        make -C <SOURCE_DIR> installhdrs ARCH_CONFIGS="x86_64 ARM64" BUILD_LTO=0
+        make -C <SOURCE_DIR> installhdrs ARCH_CONFIGS="X86_64" BUILD_LTO=0
             BUILD_WERROR=0 DO_CTFMERGE=0 KERNEL_CONFIGS=${KERNEL_CONFIG}
             SRCROOT=${CMAKE_CURRENT_SOURCE_DIR} OBJROOT=<BINARY_DIR>
             DSTROOT=${CMAKE_CURRENT_BINARY_DIR}/xnu_header_install
-            MACHINE_CONFIG=${KERNEL_MACHINE}
+            MACHINE_CONFIG=NONE
     INSTALL_COMMAND true # installed during build
     USES_TERMINAL_CONFIGURE TRUE
     USES_TERMINAL_BUILD TRUE
 )
-add_dependencies(xnu_headers.extproj host_codesign_allocate
+add_dependencies(xnu_headers_x86_64.extproj host_codesign_allocate
+    migcom host_strip host_lipo host_nm unifdef host_nmedit
+    host_ctfconvert host_ctfmerge availability.pl)
+
+externalproject_add(xnu_headers_arm64.extproj
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/xnu_header_build
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+    CONFIGURE_COMMAND true # disable auto CMake configure
+    BUILD_COMMAND
+        cmake
+            -D XNU_SRC=${CMAKE_CURRENT_SOURCE_DIR}
+            -D XNU_OBJ=<BINARY_DIR>
+            -D CODESIGN_ALLOCATE_PATH=$<TARGET_FILE:host_codesign_allocate>
+            -D CTFCONVERT_PATH=$<TARGET_FILE:host_ctfconvert>
+            -D CTFMERGE_PATH=$<TARGET_FILE:host_ctfmerge>
+            -D CTFINSERT_PATH=$<TARGET_FILE:host_ctf_insert>
+            -D AVAILABILITY_PL_PATH=$<TARGET_FILE:availability.pl>
+            -D MIG_PATH=${PUREDARWIN_SOURCE_DIR}/tools/mig/mig.sh
+            -D MIGCOM_PATH=$<TARGET_FILE:migcom>
+            -D STRIP_PATH=$<TARGET_FILE:host_strip>
+            -D LIPO_PATH=$<TARGET_FILE:host_lipo>
+            -D NM_PATH=$<TARGET_FILE:host_nm>
+            -D NMEDIT_PATH=$<TARGET_FILE:host_nmedit>
+            -D LIBTOOL_PATH=$<TARGET_FILE:host_libtool>
+            -D UNIFDEF_PATH=$<TARGET_FILE:unifdef>
+            -D DSYMUTIL_PATH=${dsymutil_path}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/preprocess_files.cmake
+    COMMAND
+        make -C <SOURCE_DIR> installhdrs ARCH_CONFIGS="ARM64" BUILD_LTO=0
+            BUILD_WERROR=0 DO_CTFMERGE=0 KERNEL_CONFIGS=${KERNEL_CONFIG}
+            SRCROOT=${CMAKE_CURRENT_SOURCE_DIR} OBJROOT=<BINARY_DIR>
+            DSTROOT=${CMAKE_CURRENT_BINARY_DIR}/xnu_header_install
+            MACHINE_CONFIG=${KERNEL_MACHINE_ALT}
+    INSTALL_COMMAND true # installed during build
+    USES_TERMINAL_CONFIGURE TRUE
+    USES_TERMINAL_BUILD TRUE
+)
+add_dependencies(xnu_headers_arm64.extproj host_codesign_allocate
     migcom host_strip host_lipo host_nm unifdef host_nmedit
     host_ctfconvert host_ctfmerge availability.pl)
 
 add_library(xnu_headers INTERFACE)
-add_dependencies(xnu_headers xnu_headers.extproj)
+add_dependencies(xnu_headers xnu_headers_x86_64.extproj xnu_headers_arm64.extproj)
 target_include_directories(xnu_headers INTERFACE
     ${CMAKE_CURRENT_BINARY_DIR}/xnu_header_install/usr/include
 )
