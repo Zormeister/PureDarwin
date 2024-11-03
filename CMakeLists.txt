@@ -14,6 +14,10 @@ cmake_policy(SET CMP0114 NEW)
 set(CMAKE_INSTALL_PREFIX "")
 set(CMAKE_MACOSX_MIN_VERSION 11.0)
 
+if(NOT DEFINED BUILD_ARCH)
+set(BUILD_ARCH "x86_64")
+endif()
+
 include(ExternalProject)
 include(cmake/asm.cmake)
 include(cmake/bundle_resources.cmake)

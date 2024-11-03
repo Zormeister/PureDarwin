@@ -6,10 +6,14 @@ function(add_darwin_executable name)
     target_compile_definitions(${name} PRIVATE __PUREDARWIN__)
     target_link_options(${name} PRIVATE -fuse-ld=$<TARGET_FILE:host_ld>)
 
+    if(NOT DEFINED BUILD_ARCH)
+    set(BUILD_ARCH "x86_64")
+    endif()
+
     if(NOT SL_USE_HOST_SDK)
         target_compile_options(${name} PRIVATE -nostdlib -nostdinc)
         target_link_options(${name} PRIVATE -nostdlib)
-        set_property(TARGET ${name} PROPERTY OSX_ARCHITECTURES x86_64)
+        set_property(TARGET ${name} PROPERTY OSX_ARCHITECTURES ${BUILD_ARCH})
     endif()
 
     # TODO: Handle SL_NO_STANDARD_LIBRARIES here, once the libraries have been added to the build.
@@ -30,6 +34,10 @@ function(add_darwin_static_library name)
     add_dependencies(${name} host_libtool)
     target_compile_definitions(${name} PRIVATE __PUREDARWIN__)
 
+    if(NOT DEFINED BUILD_ARCH)
+    set(BUILD_ARCH "x86_64")
+    endif()
+
     if(SL_MACOSX_VERSION_MIN)
         set_property(TARGET ${name} PROPERTY CMAKE_OSX_DEPLOYMENT_TARGET ${SL_MACOSX_VERSION_MIN})
     elseif(CMAKE_MACOSX_MIN_VERSION)
@@ -40,7 +48,7 @@ function(add_darwin_static_library name)
 
     if(NOT SL_USE_HOST_SDK)
         target_compile_options(${name} PRIVATE -nostdlib -nostdinc)
-        set_property(TARGET ${name} PROPERTY OSX_ARCHITECTURES x86_64)
+        set_property(TARGET ${name} PROPERTY OSX_ARCHITECTURES ${BUILD_ARCH})
     endif()
 endfunction()
 
@@ -65,11 +73,15 @@ function(add_darwin_shared_library name)
     endif()
     set_property(TARGET ${name} PROPERTY SUFFIX .dylib)
 
+    if(NOT DEFINED BUILD_ARCH)
+    set(BUILD_ARCH "x86_64")
+    endif()
+
     if(NOT SL_USE_HOST_SDK)
         target_compile_options(${name} PRIVATE -nostdlib -nostdinc)
         target_link_options(${name} PRIVATE -nostdlib)
 
-        set_property(TARGET ${name} PROPERTY OSX_ARCHITECTURES x86_64)
+        set_property(TARGET ${name} PROPERTY OSX_ARCHITECTURES ${BUILD_ARCH})
     endif()
 
     if(SL_MACOSX_VERSION_MIN)
@@ -112,9 +124,13 @@ function(add_darwin_object_library name)
         message(AUTHOR_WARNING "Could not determine -mmacosx-version-min flag for target ${name}")
     endif()
 
+    if(NOT DEFINED BUILD_ARCH)
+    set(BUILD_ARCH "x86_64")
+    endif()
+
     if(NOT SL_USE_HOST_SDK)
         target_compile_options(${name} PRIVATE -nostdlib -nostdinc)
-        set_property(TARGET ${name} PROPERTY OSX_ARCHITECTURES x86_64)
+        set_property(TARGET ${name} PROPERTY OSX_ARCHITECTURES ${BUILD_ARCH})
     endif()
 endfunction()
 
