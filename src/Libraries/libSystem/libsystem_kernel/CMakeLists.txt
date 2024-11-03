@@ -25,6 +25,11 @@
 # - /usr/local/lib/loaderd/libsystem_kernel.a (copy of /usr/local/lib/dyld/libsystem_kernel.a)
 # - /usr/local/lib/dyld_stub/libsystem_kernel.a (copy of /usr/local/lib/dyld/libsystem_kernel.a)
 
+if (NOT DEFINED KERNEL_ARCH)
+set(KERNEL_ARCH "X86_64")
+endif()
+
+if (KERNEL_ARCH STREQUAL "X86_64")
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/syscalls.a
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/sys
     COMMAND ${CMAKE_COMMAND} -E env ARCHS=x86_64
@@ -44,6 +49,28 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/syscalls.a
         ${PUREDARWIN_SOURCE_DIR}/src/Kernel/xnu/bsd/kern/syscalls.master
     COMMENT "Compile syscall stubs" VERBATIM
 )
+elseif(KERNEL_ARCH STREQUAL "ARM64")
+# hacky solution???
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/syscalls.a
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/sys
+    COMMAND ${CMAKE_COMMAND} -E env ARCHS=arm64
+        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/create-syscalls.pl
+        ${PUREDARWIN_SOURCE_DIR}/src/Kernel/xnu/bsd/kern/syscalls.master
+        ${CMAKE_CURRENT_SOURCE_DIR}/custom ${CMAKE_CURRENT_SOURCE_DIR}/Platforms
+        MacOSX ${CMAKE_CURRENT_BINARY_DIR}/sys
+    COMMAND ${CMAKE_COMMAND} -E env ARCHS=arm64
+        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/compile-syscalls.pl
+        ${CMAKE_CURRENT_BINARY_DIR}/sys/stubs.list ${CMAKE_CURRENT_BINARY_DIR}/syscalls.a
+        -I${PUREDARWIN_BINARY_DIR}/src/Kernel/xnu/xnu_header_install/usr/include
+        -I${PUREDARWIN_BINARY_DIR}/src/Kernel/xnu/xnu_header_install/System/Library/Frameworks/System.framework/Versions/B/PrivateHeaders
+        -I${PUREDARWIN_SOURCE_DIR}/src/Kernel/xnu/EXTERNAL_HEADERS
+    DEPENDS
+        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/create-syscalls.pl
+        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/compile-syscalls.pl
+        ${PUREDARWIN_SOURCE_DIR}/src/Kernel/xnu/bsd/kern/syscalls.master
+    COMMENT "Compile syscall stubs" VERBATIM
+)
+endif()
 
 add_library(libsyscall_traps STATIC IMPORTED)
 set_property(TARGET libsyscall_traps PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/syscalls.a)
@@ -53,7 +80,7 @@ set_property(TARGET libsyscall_traps PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_
 add_library(libsystem_kernel_private_headers INTERFACE)
 target_include_directories(libsystem_kernel_private_headers INTERFACE private_include)
 
-# END INTERFACE DEFINITION
+# END INTERFACE DEFINITION﻿
 
 add_darwin_static_library(libsystem_kernel_static)
 
@@ -208,7 +235,11 @@ target_include_directories(libsystem_kernel_static PUBLIC include ${CMAKE_CURREN
 target_include_directories(libsystem_kernel_static PRIVATE mach mach/mach mach/servers custom wrappers)
 target_include_directories(libsystem_kernel_static PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/internal_include)
 
+if (KERNEL_ARCH STREQUAL "X86_64")
 target_compile_options(libsystem_kernel_static PRIVATE -fdollars-in-identifiers -no-cpp-precomp -fno-common -fno-stack-protector -fno-stack-check -momit-leaf-frame-pointer -Wno-nullability-completeness -Wno-implicit-function-declaration)
+elseif(KERNEL_ARCH STREQUAL "ARM64")
+target_compile_options(libsystem_kernel_static PRIVATE -fdollars-in-identifiers -no-cpp-precomp -fno-common -fno-stack-protector -fno-stack-check -momit-leaf-frame-pointer -Wno-nullability-completeness -Wno-implicit-function-declaration -arch arm64)
+endif()
 
 # We define LIBSYSCALL_INTERFACE to pass to the MIG compiler below. This will indicate we don't want 'internal' versions of the given MIG files.
 target_compile_definitions(libsystem_kernel_static PRIVATE _FORTIFY_SOURCE=0 __DARWIN_VERS_1050=1 NO_SYSCALL_LEGACY SYSCALL_PRE1050 LIBSYSCALL_INTERFACE)
@@ -266,7 +297,7 @@ mig(mach/mach_vm.defs INCLUDES_FROM_TARGET libsystem_kernel_static NODEFINES TRU
 mig(mach/task.defs INCLUDES_FROM_TARGET libsystem_kernel_static NODEFINES TRUE USER_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/internal_include/mach/task.c USER_HEADER ${CMAKE_CURRENT_BINARY_DIR}/internal_include/mach/task_internal.h NOVOUCHERS)
 mig(mach/thread_act.defs INCLUDES_FROM_TARGET libsystem_kernel_static NODEFINES TRUE USER_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/internal_include/mach/thread_act.c USER_HEADER ${CMAKE_CURRENT_BINARY_DIR}/internal_include/mach/thread_act_internal.h NOVOUCHERS)
 mig(mach/vm_map.defs INCLUDES_FROM_TARGET libsystem_kernel_static NODEFINES TRUE USER_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/internal_include/mach/vm_map.c USER_HEADER ${CMAKE_CURRENT_BINARY_DIR}/internal_include/mach/vm_map_internal.h NOVOUCHERS)
-
+﻿
 # MIG output from above
 target_sources(libsystem_kernel_static PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/clock_priv.c
