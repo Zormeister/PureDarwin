@@ -1,4 +1,4 @@
-add_darwin_static_library(CrashReporterClient)
+add_darwin_static_library(CrashReporterClient ARCHS "x86_64;arm64")
 
 target_sources(CrashReporterClient PRIVATE CrashReporterClient.c)
 

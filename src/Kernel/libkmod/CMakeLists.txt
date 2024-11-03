@@ -1,4 +1,4 @@
-add_darwin_static_library(libkmod)
+add_darwin_static_library(libkmod ARCHS "x86_64;arm64")
 set_property(TARGET libkmod PROPERTY OUTPUT_NAME "kmod")
 target_sources(libkmod PRIVATE c_start.c c_stop.c)
 target_link_libraries(libkmod PRIVATE xnu_kernel_headers AvailabilityHeaders)
