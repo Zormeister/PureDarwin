@@ -80,7 +80,7 @@ set_property(TARGET libsyscall_traps PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_
 add_library(libsystem_kernel_private_headers INTERFACE)
 target_include_directories(libsystem_kernel_private_headers INTERFACE private_include)
 
-# END INTERFACE DEFINITION﻿
+# END INTERFACE DEFINITION
 
 add_darwin_static_library(libsystem_kernel_static)
 
@@ -297,7 +297,7 @@ mig(mach/mach_vm.defs INCLUDES_FROM_TARGET libsystem_kernel_static NODEFINES TRU
 mig(mach/task.defs INCLUDES_FROM_TARGET libsystem_kernel_static NODEFINES TRUE USER_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/internal_include/mach/task.c USER_HEADER ${CMAKE_CURRENT_BINARY_DIR}/internal_include/mach/task_internal.h NOVOUCHERS)
 mig(mach/thread_act.defs INCLUDES_FROM_TARGET libsystem_kernel_static NODEFINES TRUE USER_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/internal_include/mach/thread_act.c USER_HEADER ${CMAKE_CURRENT_BINARY_DIR}/internal_include/mach/thread_act_internal.h NOVOUCHERS)
 mig(mach/vm_map.defs INCLUDES_FROM_TARGET libsystem_kernel_static NODEFINES TRUE USER_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/internal_include/mach/vm_map.c USER_HEADER ${CMAKE_CURRENT_BINARY_DIR}/internal_include/mach/vm_map_internal.h NOVOUCHERS)
-﻿
+
 # MIG output from above
 target_sources(libsystem_kernel_static PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/clock_priv.c
