@@ -60,7 +60,9 @@
 // allows for porting to non-memory-mapped IO systems, such as x86.
 // for such a platform, create a class and overload the assignment operators
 // so that the correct IO operation is performed and define the type for that architecture port.
-#ifdef __ppc__
+
+// ARM/ARM64 have no concept of IO ports, so uh. yeah idk what the correct method would be here tbh.
+#if defined( __ppc__ ) || defined( __arm__ ) || defined( __arm64__ )
 #define IOATARegPtr8 volatile UInt8* 
 #define IOATARegPtr16 volatile UInt16*
 #define IOATARegPtr32 volatile UInt32*
