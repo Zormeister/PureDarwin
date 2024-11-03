@@ -15,16 +15,16 @@ jobs:
             brew install openssl ninja
         - name: Build (x86_64, Release)
           run: |
-            mkdir build-X86_64-RELEASE && cd build
+            mkdir build-X86_64-RELEASE && cd build-X86_64-RELEASE
             cmake -G Ninja -DKERNEL_BUILD_XNU=1 -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DKERNEL_CONIFG="RELEASE" -DKERNEL_ARCH="X86_64" ..
             ninja
         - name: Build (x86_64, Development)
           run: |
-            mkdir build-X86_64-DEVELOPMENT && cd build
+            mkdir build-X86_64-DEVELOPMENT && cd build-X86_64-DEVELOPMENT
             cmake -G Ninja -DKERNEL_BUILD_XNU=1 -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DKERNEL_CONIFG="DEVELOPMENT" -DKERNEL_ARCH="X86_64" ..
             ninja
         - name: Build (ARM64, VMAPPLE, Development)
           run: |
-              mkdir build-ARM64-VMAPPLE-DEVELOPMENT && cd build
+              mkdir build-ARM64-VMAPPLE-DEVELOPMENT && cd build-ARM64-VMAPPLE-DEVELOPMENT
               cmake -G Ninja -DKERNEL_BUILD_XNU=1 -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DKERNEL_CONIFG="DEVELOPMENT" -DKERNEL_ARCH="ARM64" -DKERNEL_MACHINE="VMAPPLE" ..
               ninja
