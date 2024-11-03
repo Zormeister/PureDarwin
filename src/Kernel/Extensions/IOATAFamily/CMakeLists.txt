@@ -1,5 +1,5 @@
 add_kext_bundle(IOATAFamily INFO_PLIST Info.plist KERNEL_PRIVATE
-    BUNDLE_IDENTIFIER com.apple.iokit.IOATAFamily BUNDLE_VERSION 2.5.3)
+    BUNDLE_IDENTIFIER com.apple.iokit.IOATAFamily BUNDLE_VERSION 2.5.3 ARCHS "x86_64;arm64")
 
 target_sources(IOATAFamily PRIVATE
     ATADeviceNub.cpp

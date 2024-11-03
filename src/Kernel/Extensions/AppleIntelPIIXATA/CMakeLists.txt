@@ -1,4 +1,4 @@
-add_kext_bundle(AppleIntelPIIXATA KERNEL_PRIVATE INFO_PLIST Info.plist BUNDLE_IDENTIFIER com.apple.driver.AppleIntelPIIXATA BUNDLE_VERSION 2.5.1)
+add_kext_bundle(AppleIntelPIIXATA KERNEL_PRIVATE INFO_PLIST Info.plist BUNDLE_IDENTIFIER com.apple.driver.AppleIntelPIIXATA BUNDLE_VERSION 2.5.1 ARCHS x86_64)
 target_sources(AppleIntelPIIXATA PRIVATE
     AppleIntelICHxSATA.cpp
     AppleIntelPIIXATAChannel.cpp

@@ -1,4 +1,4 @@
-add_kext_bundle(ApplePS2Controller INFO_PLIST Info.plist BUNDLE_IDENTIFIER com.apple.driver.ApplePS2Controller BUNDLE_VERSION 1.1.0d1)
+add_kext_bundle(ApplePS2Controller INFO_PLIST Info.plist BUNDLE_IDENTIFIER com.apple.driver.ApplePS2Controller BUNDLE_VERSION 1.1.0d1 ARCHS x86_64)
 target_sources(ApplePS2Controller PRIVATE
     ApplePS2Controller.cpp
     ApplePS2KeyboardDevice.cpp

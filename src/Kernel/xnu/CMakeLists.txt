@@ -50,7 +50,7 @@ externalproject_add(xnu_headers.extproj
             -D DSYMUTIL_PATH=${dsymutil_path}
             -P ${CMAKE_CURRENT_SOURCE_DIR}/preprocess_files.cmake
     COMMAND
-        make -C <SOURCE_DIR> installhdrs ARCH_CONFIGS=${KERNEL_ARCH} BUILD_LTO=0
+        make -C <SOURCE_DIR> installhdrs ARCH_CONFIGS="x86_64 ARM64" BUILD_LTO=0
             BUILD_WERROR=0 DO_CTFMERGE=0 KERNEL_CONFIGS=${KERNEL_CONFIG}
             SRCROOT=${CMAKE_CURRENT_SOURCE_DIR} OBJROOT=<BINARY_DIR>
             DSTROOT=${CMAKE_CURRENT_BINARY_DIR}/xnu_header_install

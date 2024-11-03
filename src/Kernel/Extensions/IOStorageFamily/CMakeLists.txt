@@ -1,5 +1,5 @@
 add_kext_bundle(IOStorageFamily INFO_PLIST Info.plist KERNEL_PRIVATE
-    BUNDLE_IDENTIFIER com.apple.iokit.IOStorageFamily BUNDLE_VERSION 2.1)
+    BUNDLE_IDENTIFIER com.apple.iokit.IOStorageFamily BUNDLE_VERSION 2.1 ARCHS "x86_64;arm64")
 
 target_sources(IOStorageFamily PRIVATE
     IOAppleLabelScheme.cpp

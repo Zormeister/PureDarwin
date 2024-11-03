@@ -1,6 +1,6 @@
 add_kext_bundle(pthread.kext INFO_PLIST pthread-Info.plist KERNEL_PRIVATE
     BUNDLE_IDENTIFIER org.puredarwin.kec.pthread BUNDLE_VERSION 1.0.0d1
-    MAIN_FUNCTION pthread_start ANTIMAIN_FUNCTION pthread_stop)
+    MAIN_FUNCTION pthread_start ANTIMAIN_FUNCTION pthread_stop ARCHS "x86_64;arm64")
 set_property(TARGET pthread.kext PROPERTY OUTPUT_NAME pthread)
 
 target_sources(pthread.kext PRIVATE

@@ -1,4 +1,4 @@
-add_kext_bundle(IOACPIFamily KERNEL_PRIVATE INFO_PLIST Info.plist BUNDLE_IDENTIFIER com.apple.iokit.IOACPIFamily BUNDLE_VERSION 1.0.0d1)
+add_kext_bundle(IOACPIFamily KERNEL_PRIVATE INFO_PLIST Info.plist BUNDLE_IDENTIFIER com.apple.iokit.IOACPIFamily BUNDLE_VERSION 1.0.0d1 ARCHS "x86_64;arm64")
 target_sources(IOACPIFamily PRIVATE
     IOACPIPlatformDevice.cpp
     IOACPIPlatformExpert.cpp

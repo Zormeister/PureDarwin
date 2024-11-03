@@ -1,6 +1,6 @@
 add_kext_bundle(corecrypto.kext INFO_PLIST kext/Info.plist KERNEL_PRIVATE
     BUNDLE_IDENTIFIER org.puredarwin.kec.corecrypto BUNDLE_VERSION 1.0d1
-    MAIN_FUNCTION cc_kext_start ANTIMAIN_FUNCTION cc_kext_stop
+    MAIN_FUNCTION cc_kext_start ANTIMAIN_FUNCTION cc_kext_stop ARCHS "x86_64;arm64"
 )
 set_property(TARGET corecrypto.kext PROPERTY OUTPUT_NAME corecrypto)
 

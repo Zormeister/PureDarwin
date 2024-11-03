@@ -1,4 +1,4 @@
-add_kext_bundle(IOPCIFamily KERNEL_PRIVATE INFO_PLIST Info.plist BUNDLE_IDENTIFIER com.apple.iokit.IOPCIFamily BUNDLE_VERSION 2.4.1)
+add_kext_bundle(IOPCIFamily KERNEL_PRIVATE INFO_PLIST Info.plist BUNDLE_IDENTIFIER com.apple.iokit.IOPCIFamily BUNDLE_VERSION 2.4.1 ARCHS "x86_64;arm64")
 target_sources(IOPCIFamily PRIVATE
     IOPCIBridge.cpp
     IOPCIConfigurator.cpp
