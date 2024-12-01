@@ -32,7 +32,7 @@ SUPPORTED_ARM_MACHINE_CONFIGS = NONE
 SUPPORTED_ARM64_MACHINE_CONFIGS = NONE
 else
 SUPPORTED_ARM_MACHINE_CONFIGS = T8002 T8004
-SUPPORTED_ARM64_MACHINE_CONFIGS = T7000 T7001 S8000 S8001 T8010 T8011 BCM2837
+SUPPORTED_ARM64_MACHINE_CONFIGS = T7000 T7001 S8000 S8001 T8010 T8011 BCM2837 T8020 T8101 T8103
 
 endif
 
@@ -59,15 +59,18 @@ COMPONENT_LIST	= osfmk bsd libkern iokit pexpert libsa security san
 COMPONENT	= $(if $(word 2,$(subst /, ,$(RELATIVE_SOURCE_PATH))),$(word 2,$(subst /, ,$(RELATIVE_SOURCE_PATH))),$(firstword $(subst /, ,$(RELATIVE_SOURCE_PATH))))
 COMPONENT_IMPORT_LIST = $(filter-out $(COMPONENT),$(COMPONENT_LIST))
 
-MACHINE_FLAGS_ARM64_T7000 = -DARM64_BOARD_CONFIG_T7000
-MACHINE_FLAGS_ARM64_T7001 = -DARM64_BOARD_CONFIG_T7001
-MACHINE_FLAGS_ARM64_S8000 = -DARM64_BOARD_CONFIG_S8000
-MACHINE_FLAGS_ARM64_S8001 = -DARM64_BOARD_CONFIG_S8001
+MACHINE_FLAGS_ARM64_T7000 = -DARM64_BOARD_CONFIG_T7000 -mcpu=apple-h7
+MACHINE_FLAGS_ARM64_T7001 = -DARM64_BOARD_CONFIG_T7001 -mcpu=apple-h7
+MACHINE_FLAGS_ARM64_S8000 = -DARM64_BOARD_CONFIG_S8000 -mcpu=apple-h8
+MACHINE_FLAGS_ARM64_S8001 = -DARM64_BOARD_CONFIG_S8001 -mcpu=apple-h8
 MACHINE_FLAGS_ARM_T8002 = -DARM_BOARD_CONFIG_T8002
 MACHINE_FLAGS_ARM_T8004 = -DARM_BOARD_CONFIG_T8004
 MACHINE_FLAGS_ARM64_T8010 = -DARM64_BOARD_CONFIG_T8010 -mcpu=hurricane
 MACHINE_FLAGS_ARM64_T8011 = -DARM64_BOARD_CONFIG_T8011 -mcpu=hurricane
 MACHINE_FLAGS_ARM64_BCM2837 = -DARM64_BOARD_CONFIG_BCM2837
+MACHINE_FLAGS_ARM64_T8020 = -DARM64_BOARD_CONFIG_T8020 -mcpu=vortex
+MACHINE_FLAGS_ARM64_T8101 = -DARM64_BOARD_CONFIG_T8101 -mcpu=firestorm
+MACHINE_FLAGS_ARM64_T8103 = -DARM64_BOARD_CONFIG_T8103 -mcpu=firestorm
 
 
 #
@@ -152,16 +155,13 @@ WARNFLAGS_STD := \
 	-Wno-bad-function-cast \
 	-Wno-c++-compat \
 	-Wno-c++98-compat \
-	-Wno-cast-function-type \
 	-Wno-conditional-uninitialized \
 	-Wno-covered-switch-default \
-	-Wno-declaration-after-statement \
 	-Wno-disabled-macro-expansion \
 	-Wno-documentation-unknown-command \
 	-Wno-extra-semi-stmt \
 	-Wno-format-non-iso \
 	-Wno-format-nonliteral \
-	-Wno-four-char-constants \
 	-Wno-language-extension-token \
 	-Wno-missing-variable-declarations \
 	-Wno-packed \
@@ -169,15 +169,10 @@ WARNFLAGS_STD := \
 	-Wno-partial-availability \
 	-Wno-reserved-id-macro \
 	-Wno-shift-sign-overflow \
-	-Wno-suggest-destructor-override \
-	-Wno-suggest-override \
 	-Wno-switch-enum \
-	-Wno-unaligned-access \
 	-Wno-undef \
-	-Wno-undef-prefix \
 	-Wno-unused-macros \
 	-Wno-used-but-marked-unused \
-	-Wno-unused-but-set-variable \
 	-Wno-variadic-macros \
 	-Wno-vla \
 	-Wno-zero-length-array
@@ -233,6 +228,13 @@ endef
 ARCH_FLAGS_X86_64	  = -arch x86_64
 ARCH_FLAGS_X86_64H	  = -arch x86_64h
 
+ifeq ($(RC_ProjectName),xnu_libraries)
+WILL_BUILD_STATIC_KC := 1
+BUILD_STATIC_LINK := 1
+BUILD_XNU_LIBRARY := 1
+RC_NONARCH_CFLAGS += -D__BUILDING_XNU_LIBRARY__=1
+endif
+
 ifneq ($(filter ARM ARM64,$(CURRENT_ARCH_CONFIG)),)
 
 ifneq ($(findstring _Sim,$(RC_ProjectName)),)
@@ -248,6 +250,9 @@ export ARCH_STRING_FOR_CURRENT_MACHINE_CONFIG := $(shell $(EMBEDDED_DEVICE_MAP) 
 else
 # Without embdedded device map, use a default arch string
 export ARCH_STRING_FOR_CURRENT_MACHINE_CONFIG := $(shell echo $(CURRENT_ARCH_CONFIG) | tr A-Z a-z)
+ifneq ($(filter ARM64,$(CURRENT_ARCH_CONFIG)),)
+export ARCH_STRING_FOR_CURRENT_MACHINE_CONFIG := arm64e
+endif
 endif
 endif
 
@@ -283,7 +288,7 @@ endif
 # Default CFLAGS
 #
 ifdef RC_NONARCH_CFLAGS
-OTHER_CFLAGS = $(RC_NONARCH_CLFAGS)
+OTHER_CFLAGS = $(RC_NONARCH_CFLAGS)
 endif
 
 #
@@ -332,9 +337,11 @@ ARM64_LINK_ADDR    =0xfffffff007004000
 
 # Use ARM_LARGE_MEMORY config for all MacOSX targets.
 ifneq ($(filter $(PLATFORM),MacOSX),)
+ifeq (,$(filter $(CURRENT_MACHINE_CONFIG),VMAPPLE)) # Not supporting >32 GB memory for vmapple
 LARGE_MEMORY_DEFINE=-DARM_LARGE_MEMORY=1
 ARM64_PLKSEG_ADDR  =0xfffffe0004004000
 ARM64_LINK_ADDR    =0xfffffe0007004000
+endif
 endif
 
 
@@ -570,6 +577,10 @@ LDFLAGS_KERNEL_RELEASEX86_64 = \
 	-Wl,-sectalign,__HIB,__cstring,0x1000 \
 	-Wl,-rename_section,__DATA,__const,__DATA_CONST,__const \
 	-Wl,-segprot,__DATA_CONST,r--,r-- \
+	-Wl,-rename_section,__KLD,__const,__KLDDATA,__const \
+	-Wl,-rename_section,__KLD,__cstring,__KLDDATA,__cstring \
+	-Wl,-segprot,__KLDDATA,rw-,rw- \
+	-Wl,-segprot,__KLD,r-x,r-x \
 	-Wl,-no_zero_fill_sections \
 	$(LDFLAGS_NOSTRIP_FLAG)
 
@@ -611,7 +622,11 @@ LDFLAGS_KERNEL_GENARM = \
 	-Wl,-static \
 	-Wl,-image_base,0x80001000 \
 	-Wl,-sectalign,__DATA,__const,0x1000 \
-	-Wl,-u,___udivmoddi4
+	-Wl,-u,___udivmoddi4 \
+	-Wl,-rename_section,__KLD,__const,__KLDDATA,__const \
+	-Wl,-rename_section,__KLD,__cstring,__KLDDATA,__cstring \
+	-Wl,-segprot,__KLDDATA,rw-,rw- \
+	-Wl,-segprot,__KLD,r-x,r-x
 
 LDFLAGS_KERNEL_RELEASEARM     = \
 	$(LDFLAGS_KERNEL_GENARM) \
@@ -680,6 +695,10 @@ LDFLAGS_KERNEL_GENARM64 = \
 	-Wl,-rename_section,__DATA,__auth_got,__DATA_CONST,__auth_got \
 	-Wl,-rename_section,__DATA,__const,__DATA_CONST,__const \
 	-Wl,-segprot,__DATA_CONST,r--,r-- \
+	-Wl,-rename_section,__KLD,__const,__KLDDATA,__const \
+	-Wl,-rename_section,__KLD,__cstring,__KLDDATA,__cstring \
+	-Wl,-segprot,__KLDDATA,rw-,rw- \
+	-Wl,-segprot,__KLD,r-x,r-x \
 	-Wl,-rename_section,__TEXT,__text,__TEXT_EXEC,__text \
 	-Wl,-rename_section,__TEXT,__stubs,__TEXT_EXEC,__stubs \
 	-Wl,-sectcreate,"__PLK_TEXT_EXEC",__text,/dev/null \
@@ -688,9 +707,10 @@ LDFLAGS_KERNEL_GENARM64 = \
 	-Wl,-sectcreate,"__PLK_LLVM_COV",__llvm_covmap,/dev/null \
 	-Wl,-sectcreate,"__PLK_LINKEDIT",__data,/dev/null
 
-
-LDFLAGS_KERNEL_SEGARM64 ?= \
-	-Wl,-segment_order,__TEXT:__DATA_CONST:__LINKEDIT:__TEXT_EXEC:__LAST:__KLD:__DATA:__BOOTDATA
+LDFLAGS_KERNEL_SEGARM64 = \
+	-Wl,-rename_section,__PPLDATA,__const,__PPLDATA_CONST,__const \
+	-Wl,-segment_order,__TEXT:__DATA_CONST:__LINKEDIT:__TEXT_EXEC:__KLD:__PPLTEXT:__PPLTRAMP:__PPLDATA_CONST:__LASTDATA_CONST:__LAST:__PPLDATA:__KLDDATA:__DATA:__HIBDATA:__BOOTDATA \
+	-Wl,-segprot,__PPLTEXT,r-x,r-x  -Wl,-segprot,__PPLTRAMP,r-x,r-x -Wl,-segprot,__PPLDATA_CONST,r--,r-- -Wl,-segprot,__LASTDATA_CONST,r--,r-- -Wl,-segprot,__LAST,r-x,r-x \
 
 LDFLAGS_KERNEL_RELEASEARM64     = \
 	$(LDFLAGS_KERNEL_GENARM64) \
@@ -718,10 +738,12 @@ LDFLAGS_KERNEL_ONLY_CONFIG_DEBUGARM64 = $(LDFLAGS_KERNEL_ONLY_CONFIG_DEVELOPMENT
 # (and not the static kernel cache / kcgen)
 #
 LDFLAGS_KERNEL_ONLY_SUBARCH_arm64e = \
-	-Wl,-add_split_seg_info
+	-Wl,-add_split_seg_info \
+	-Wl,-kernel
 
 LDFLAGS_KERNEL_ONLY_SUBARCH_x86_64 = \
-	-Wl,-add_split_seg_info
+	-Wl,-add_split_seg_info \
+	-Wl,-kernel
 LDFLAGS_KERNEL_ONLY_SUBARCH_x86_64h = $(LDFLAGS_KERNEL_ONLY_SUBARCH_x86_64)
 
 LDFLAGS_KERNEL	= $(LDFLAGS_KERNEL_GEN) \
@@ -732,7 +754,7 @@ LDFLAGS_KERNEL	= $(LDFLAGS_KERNEL_GEN) \
 		  $($(addsuffix $(CURRENT_ARCH_CONFIG), $(addsuffix $(CURRENT_KERNEL_CONFIG),LDFLAGS_KERNEL_))) \
 		  $(DEPLOYMENT_TARGET_FLAGS)
 
-LDFLAGS_KERNEL_ONLY   =   \
+LDFLAGS_KERNEL_ONLY  +=   \
 		  $($(addsuffix $(CURRENT_ARCH_CONFIG), $(addsuffix $(CURRENT_KERNEL_CONFIG),LDFLAGS_KERNEL_ONLY_CONFIG_))) \
 		  $($(addsuffix $(ARCH_STRING_FOR_CURRENT_MACHINE_CONFIG),LDFLAGS_KERNEL_ONLY_SUBARCH_)) \
 		  -Wl,-alias_list,$(TARGET)/all-alias.exp \
@@ -743,6 +765,10 @@ LDFLAGS_KERNEL_ONLY   =   \
 #
 LD_KERNEL_LIBS	   = -lcc_kext
 LD_KERNEL_ARCHIVES = $(LDFLAGS_KERNEL_SDK) -lfirehose_kernel
+# Link opensource binary library
+ifneq ($(filter T8020 T8101 T8020 T8101,$(CURRENT_MACHINE_CONFIG)),)
+	LDFLAGS_KERNEL_ONLY += -rdynamic -Wl,-force_load,$(KDKROOT)/System/Library/KernelSupport/lib$(CURRENT_MACHINE_CONFIG).os.$(CURRENT_KERNEL_CONFIG).a
+endif
 
 #
 # DTrace support
